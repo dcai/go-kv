@@ -1,9 +1,12 @@
 package main
 
-import "fmt"
-import "errors"
-import "rsc.io/quote"
-import "math/rand"
+import (
+	"errors"
+	"fmt"
+	"math/rand"
+
+	"rsc.io/quote"
+)
 
 func randomFormat() string {
 	formats := []string{
