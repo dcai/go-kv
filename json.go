@@ -1,17 +1,20 @@
 package main
 
 import (
-	"github.com/jedib0t/go-pretty/v6/table"
-
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 	"time"
+
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 type keyValueItem struct {
@@ -56,17 +59,6 @@ func SaveStore(filename string, store *keyValueStore) {
 	ioutil.WriteFile(filename, bytes, 0644)
 }
 
-// func writeJson(filename string, store KeyValueStore) {
-// 	// data, err = json.Marshal(store)
-// 	// if err != nil {
-// 	//     log.Fatal(err)
-// 	// }
-// 	// err = ioutil.WriteFile(filename, data, 0644)
-// 	// if err != nil {
-// 	//     log.Fatal(err)
-// 	// }
-// }
-
 func readFileAsString(filename string) string {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -74,25 +66,29 @@ func readFileAsString(filename string) string {
 	}
 	return string(data)
 }
+
+func now() string {
+	return time.Now().Format(time.RFC3339)
+}
 func createItem(key string, value string) *keyValueItem {
-	now := time.Now().Format(time.RFC3339)
-	base64Value := base64.StdEncoding.EncodeToString([]byte(value))
+	nowstr := now()
+	base64Value := base64encode(value)
 	checksum := stringChecksum(value)
 	return &keyValueItem{
 		Key:      key,
 		Value:    base64Value,
-		Created:  now,
-		Updated:  now,
+		Created:  nowstr,
+		Updated:  nowstr,
 		Checksum: checksum,
 	}
 }
 
 func updateItem(item *keyValueItem, value string) {
-	now := time.Now().Format(time.RFC3339)
-	base64Value := base64.StdEncoding.EncodeToString([]byte(value))
+	nowstr := now()
+	base64Value := base64encode(value)
 	checksum := stringChecksum(value)
 	item.Value = base64Value
-	item.Updated = now
+	item.Updated = nowstr
 	item.Checksum = checksum
 }
 
@@ -105,16 +101,22 @@ func SetValue(filename string, key string, value string) {
 	for index, v := range store.Items {
 		if v.Key == key {
 			found = true
+			log.Println("Updating key: " + key)
 			updateItem(&store.Items[index], value)
 			break
 		}
 	}
 	if !found {
+		log.Println("Adding key: " + key)
 		item := createItem(key, value)
 		store.Items = append(store.Items, *item)
 	}
 
 	SaveStore(filename, &store)
+}
+
+func base64encode(str string) string {
+	return base64.StdEncoding.EncodeToString([]byte(str))
 }
 
 func base64decode(str string) string {
@@ -137,8 +139,9 @@ func GetValue(filename string, key string) (string, error) {
 	return "", errors.New("key not found")
 }
 
-func PrintAllItems(filename string) {
+func PrintItemsInTable(filename string) {
 	t := table.NewWriter()
+	t.SetAllowedRowLength(80)
 	t.SetStyle(table.StyleColoredBlueWhiteOnBlack)
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Key", "Value"})
@@ -146,13 +149,29 @@ func PrintAllItems(filename string) {
 	store := keyValueStore{}
 	json.Unmarshal([]byte(str), &store)
 	for _, v := range store.Items {
+		value := strings.ReplaceAll(base64decode(v.Value), "\n", "")
 		t.AppendRows([]table.Row{
-			{v.Key, base64decode(v.Value)},
+			{v.Key, value},
 		})
 
 	}
 	t.AppendSeparator()
-
 	t.Render()
+}
 
+func PrintRow(item *keyValueItem) {
+	value := base64decode(item.Value)
+	fmt.Printf("KEY   : [%s]\n", text.FgHiRed.Sprint(item.Key))
+	fmt.Printf("VALUE : %s\n", text.FgGreen.Sprint(value))
+}
+
+func PrintItemsRaw(filename string) {
+	str := readFileAsString(filename)
+	store := keyValueStore{}
+	json.Unmarshal([]byte(str), &store)
+
+	for _, v := range store.Items {
+		PrintRow(&v)
+		fmt.Println(strings.Repeat("=", 80))
+	}
 }

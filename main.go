@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"log"
@@ -9,15 +10,16 @@ import (
 
 const JSON_DB_FILEPATH = "data.json"
 
+func isInputFromPipe() bool {
+	fileInfo, _ := os.Stdin.Stat()
+	return fileInfo.Mode()&os.ModeCharDevice == 0
+}
+
 func main() {
 	log.SetPrefix("[go-kv] ")
 	setCmd := flag.NewFlagSet("set", flag.ExitOnError)
-	// updateIfExists := setCmd.Bool("u", false, "update if exists")
-	// deleteKey := setCmd.Bool("D", false, "delete key")
 	getCmd := flag.NewFlagSet("get", flag.ExitOnError)
-	// name := flag.String("name", "@dcai", "Name to greet")
-	// ignore := flag.Bool("ignore", false, "should ignore")
-	// printPersonInfo(name, ignore)
+	getAllRows := getCmd.Bool("all", false, "Get all keys and values")
 
 	flag.Parse()
 
@@ -28,10 +30,23 @@ func main() {
 	switch action {
 	case "set":
 		setCmd.Parse(os.Args[2:])
+
+		var value string
+		if isInputFromPipe() {
+			scanner := bufio.NewScanner(os.Stdin)
+			for scanner.Scan() {
+				value += scanner.Text() + "\n"
+			}
+		}
 		key := setCmd.Args()[0]
-		value := setCmd.Args()[1]
-		SetValue(JSON_DB_FILEPATH, key, value)
-		fmt.Printf("key: %s, value: %s\n", key, value)
+		if len(setCmd.Args()) >= 2 {
+			value = setCmd.Args()[1]
+		}
+		if value != "" {
+			SetValue(JSON_DB_FILEPATH, key, value)
+		} else {
+			log.Fatalln("Missing value. Try 'go-kv set key value'")
+		}
 	case "get":
 		getCmd.Parse(os.Args[2:])
 		var key string
@@ -44,11 +59,20 @@ func main() {
 				fmt.Print(value)
 			}
 		} else {
-			PrintAllItems(JSON_DB_FILEPATH)
+			if *getAllRows {
+				PrintItemsRaw(JSON_DB_FILEPATH)
+			} else {
+				PrintItemsInTable(JSON_DB_FILEPATH)
+			}
 		}
+	case "rm":
+		fmt.Println("TODO - rm")
+	case "rename":
+		fmt.Println("TODO - rename")
+	case "import":
+		fmt.Println("TODO - import")
 	default:
-		fmt.Println("default")
+		fmt.Println("TODO - default")
 		os.Exit(1)
 	}
-
 }
