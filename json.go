@@ -92,11 +92,31 @@ func updateItem(item *keyValueItem, value string) {
 	item.Checksum = checksum
 }
 
-func SetValue(filename string, key string, value string) {
+func GetStore(filename string) *keyValueStore {
 	str := readFileAsString(filename)
 	store := keyValueStore{}
 	json.Unmarshal([]byte(str), &store)
+	return &store
+}
 
+func DeleteItem(filename string, key string) {
+	store := GetStore(filename)
+	var found int
+	for index, v := range store.Items {
+		if v.Key == key {
+			found = index
+			break
+		}
+	}
+	log.Printf("Deleting %s\n", key)
+
+	if found >= 0 {
+		store.Items = append(store.Items[:found], store.Items[found+1:]...)
+		SaveStore(filename, store)
+	}
+}
+func SetValue(filename string, key string, value string) {
+	store := GetStore(filename)
 	found := false
 	for index, v := range store.Items {
 		if v.Key == key {
@@ -112,7 +132,7 @@ func SetValue(filename string, key string, value string) {
 		store.Items = append(store.Items, *item)
 	}
 
-	SaveStore(filename, &store)
+	SaveStore(filename, store)
 }
 
 func base64encode(str string) string {
@@ -128,9 +148,7 @@ func base64decode(str string) string {
 }
 
 func GetValue(filename string, key string) (string, error) {
-	str := readFileAsString(filename)
-	store := keyValueStore{}
-	json.Unmarshal([]byte(str), &store)
+	store := GetStore(filename)
 	for _, v := range store.Items {
 		if v.Key == key {
 			return base64decode(v.Value), nil
@@ -140,14 +158,12 @@ func GetValue(filename string, key string) (string, error) {
 }
 
 func PrintItemsInTable(filename string) {
+	store := GetStore(filename)
 	t := table.NewWriter()
 	t.SetAllowedRowLength(80)
 	// t.SetStyle(table.StyleColoredBlueWhiteOnBlack)
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Key", "Value"})
-	str := readFileAsString(filename)
-	store := keyValueStore{}
-	json.Unmarshal([]byte(str), &store)
 	for _, v := range store.Items {
 		value := strings.ReplaceAll(base64decode(v.Value), "\n", "")
 		t.AppendRows([]table.Row{
@@ -169,9 +185,7 @@ func PrintRow(item *keyValueItem) {
 }
 
 func PrintItemsRaw(filename string) {
-	str := readFileAsString(filename)
-	store := keyValueStore{}
-	json.Unmarshal([]byte(str), &store)
+	store := GetStore(filename)
 
 	for _, v := range store.Items {
 		PrintRow(&v)

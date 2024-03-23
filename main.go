@@ -19,6 +19,7 @@ func main() {
 	log.SetPrefix("[go-kv] ")
 	setCmd := flag.NewFlagSet("set", flag.ExitOnError)
 	getCmd := flag.NewFlagSet("get", flag.ExitOnError)
+	rmCmd := flag.NewFlagSet("rm", flag.ExitOnError)
 	getAllRows := getCmd.Bool("all", false, "Get all keys and values")
 
 	flag.Parse()
@@ -70,13 +71,15 @@ func main() {
 			}
 		}
 	case "rm":
-		fmt.Println("TODO - rm")
+		rmCmd.Parse(os.Args[2:])
+		var key string
+		if len(rmCmd.Args()) > 0 {
+			key = rmCmd.Args()[0]
+		}
+		DeleteItem(JSON_DB_FILEPATH, key)
 	case "rename":
 		fmt.Println("TODO - rename")
-	case "import":
-		fmt.Println("TODO - import")
 	default:
-		fmt.Println("TODO - default")
 		os.Exit(1)
 	}
 }
