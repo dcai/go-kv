@@ -17,15 +17,11 @@ func isInputFromPipe() bool {
 
 func main() {
 	log.SetPrefix("[go-kv] ")
-	setCmd := flag.NewFlagSet("set", flag.ExitOnError)
-	getCmd := flag.NewFlagSet("get", flag.ExitOnError)
-	rmCmd := flag.NewFlagSet("rm", flag.ExitOnError)
-	getAllRows := getCmd.Bool("all", false, "Get all keys and values")
 
 	flag.Parse()
 
 	if len(os.Args) < 2 {
-		log.Fatalln("Missing action. Try 'go-kv set key value' or 'go-kv get key'")
+		log.Fatalln("Missing action. Try 'kv set key value' or 'kv get key'")
 	}
 
 	action := os.Args[1]
@@ -34,6 +30,7 @@ func main() {
 
 	switch action {
 	case "set":
+		setCmd := flag.NewFlagSet("set", flag.ExitOnError)
 		setCmd.Parse(os.Args[2:])
 
 		var value string
@@ -50,9 +47,11 @@ func main() {
 		if value != "" {
 			SetValue(JSON_DB_FILEPATH, key, value)
 		} else {
-			log.Fatalln("Missing value. Try 'go-kv set key value'")
+			log.Fatalln("Missing value. Try 'kv set key value'")
 		}
 	case "get":
+		getCmd := flag.NewFlagSet("get", flag.ExitOnError)
+		getAllRows := getCmd.Bool("all", false, "Get all keys and values")
 		getCmd.Parse(os.Args[2:])
 		var key string
 		if len(getCmd.Args()) > 0 {
@@ -71,6 +70,7 @@ func main() {
 			}
 		}
 	case "rm":
+		rmCmd := flag.NewFlagSet("rm", flag.ExitOnError)
 		rmCmd.Parse(os.Args[2:])
 		var key string
 		if len(rmCmd.Args()) > 0 {
@@ -78,7 +78,14 @@ func main() {
 		}
 		DeleteItem(JSON_DB_FILEPATH, key)
 	case "rename":
-		fmt.Println("TODO - rename")
+		renameCmd := flag.NewFlagSet("rename", flag.ExitOnError)
+		renameCmd.Parse(os.Args[2:])
+		if len(renameCmd.Args()) >= 2 {
+			oldkey := renameCmd.Args()[0]
+			newkey := renameCmd.Args()[1]
+			RenameKey(JSON_DB_FILEPATH, oldkey, newkey)
+		}
+
 	default:
 		os.Exit(1)
 	}

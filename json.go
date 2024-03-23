@@ -59,6 +59,11 @@ func SaveStore(filename string, store *keyValueStore) {
 	ioutil.WriteFile(filename, bytes, 0644)
 }
 
+func InspectStore(store *keyValueStore) {
+	bytes, _ := json.MarshalIndent(store, "", "  ")
+	log.Printf(string(bytes))
+}
+
 func readFileAsString(filename string) string {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -173,6 +178,21 @@ func PrintItemsInTable(filename string) {
 	}
 	t.AppendSeparator()
 	t.Render()
+}
+
+func RenameKey(filename string, oldKey string, newKey string) {
+	store := GetStore(filename)
+	found := false
+	for index, v := range store.Items {
+		if v.Key == oldKey {
+			found = true
+			store.Items[index].Key = newKey
+		}
+	}
+	if found {
+		// InspectStore(store)
+		SaveStore(filename, store)
+	}
 }
 
 func PrintRow(item *keyValueItem) {
