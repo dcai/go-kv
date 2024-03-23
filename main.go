@@ -3,40 +3,52 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
+	"os"
 )
 
+const JSON_DB_FILEPATH = "data.json"
+
 func main() {
-	name := flag.String("name", "@dcai", "Name to greet")
-	ignore := flag.Bool("ignore", false, "should ignore")
+	log.SetPrefix("[go-kv] ")
+	setCmd := flag.NewFlagSet("set", flag.ExitOnError)
+	// updateIfExists := setCmd.Bool("u", false, "update if exists")
+	// deleteKey := setCmd.Bool("D", false, "delete key")
+	getCmd := flag.NewFlagSet("get", flag.ExitOnError)
+	// name := flag.String("name", "@dcai", "Name to greet")
+	// ignore := flag.Bool("ignore", false, "should ignore")
+	// printPersonInfo(name, ignore)
 
 	flag.Parse()
 
-	url := fmt.Sprintf("https://httpbin.org/get?name=%s", *name)
+	action := os.Args[1]
 
-	resp, err := http.Get(url)
-	if err != nil {
-		log.Fatalln(err)
+	InitJsonDB(JSON_DB_FILEPATH)
+
+	switch action {
+	case "set":
+		setCmd.Parse(os.Args[2:])
+		key := setCmd.Args()[0]
+		value := setCmd.Args()[1]
+		SetValue(JSON_DB_FILEPATH, key, value)
+		fmt.Printf("key: %s, value: %s\n", key, value)
+	case "get":
+		getCmd.Parse(os.Args[2:])
+		var key string
+		if len(getCmd.Args()) > 0 {
+			key = getCmd.Args()[0]
+		}
+		if key != "" {
+			value, err := GetValue(JSON_DB_FILEPATH, key)
+			if err == nil {
+				fmt.Print(value)
+			}
+		} else {
+			PrintAllItems(JSON_DB_FILEPATH)
+		}
+	default:
+		fmt.Println("default")
+		os.Exit(1)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	sb := string(body)
-	log.Println(sb)
-
-	log.SetPrefix("greetings: ")
-	log.SetFlags(0)
-	message, err := Hello(*name)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if *ignore {
-		fmt.Println("I am ignoring you")
-	} else {
-		fmt.Println(message)
-	}
 }

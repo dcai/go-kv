@@ -1,11 +1,11 @@
-module github.com/dcai/go-playground
+module github.com/dcai/kv
 
 go 1.22.1
 
-require rsc.io/quote v1.5.2
+require github.com/jedib0t/go-pretty/v6 v6.5.5
 
 require (
-	github.com/mattn/go-sqlite3 v1.14.22 // indirect
-	golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c // indirect
-	rsc.io/sampler v1.3.0 // indirect
+	github.com/mattn/go-runewidth v0.0.15 // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
 )
