@@ -142,7 +142,7 @@ func GetValue(filename string, key string) (string, error) {
 func PrintItemsInTable(filename string) {
 	t := table.NewWriter()
 	t.SetAllowedRowLength(80)
-	t.SetStyle(table.StyleColoredBlueWhiteOnBlack)
+	// t.SetStyle(table.StyleColoredBlueWhiteOnBlack)
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Key", "Value"})
 	str := readFileAsString(filename)
@@ -161,8 +161,11 @@ func PrintItemsInTable(filename string) {
 
 func PrintRow(item *keyValueItem) {
 	value := base64decode(item.Value)
-	fmt.Printf("KEY   : [%s]\n", text.FgHiRed.Sprint(item.Key))
-	fmt.Printf("VALUE : %s\n", text.FgGreen.Sprint(value))
+	sep := text.FgHiBlack.Sprint(":")
+	fmt.Printf("KEY     %s %s\n", sep, text.FgHiRed.Sprint(item.Key))
+	fmt.Printf("CREATED %s %s\n", sep, text.FgYellow.Sprint(item.Created))
+	fmt.Printf("UPDATED %s %s\n", sep, text.FgYellow.Sprint(item.Updated))
+	fmt.Printf("VALUE   %s %s\n", sep, text.FgGreen.Sprint(value))
 }
 
 func PrintItemsRaw(filename string) {
@@ -172,6 +175,6 @@ func PrintItemsRaw(filename string) {
 
 	for _, v := range store.Items {
 		PrintRow(&v)
-		fmt.Println(strings.Repeat("=", 80))
+		fmt.Println(text.FgHiBlack.Sprint(strings.Repeat("=", 80)))
 	}
 }

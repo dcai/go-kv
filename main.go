@@ -23,6 +23,10 @@ func main() {
 
 	flag.Parse()
 
+	if len(os.Args) < 2 {
+		log.Fatalln("Missing action. Try 'go-kv set key value' or 'go-kv get key'")
+	}
+
 	action := os.Args[1]
 
 	InitJsonDB(JSON_DB_FILEPATH)
