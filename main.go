@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 )
@@ -35,10 +35,12 @@ func main() {
 
 		var value string
 		if isInputFromPipe() {
-			scanner := bufio.NewScanner(os.Stdin)
-			for scanner.Scan() {
-				value += scanner.Text() + "\n"
+			bytes, err := io.ReadAll(os.Stdin)
+
+			if err != nil {
+				log.Fatal(err)
 			}
+			value = string(bytes)
 		}
 		key := setCmd.Args()[0]
 		if len(setCmd.Args()) >= 2 {
