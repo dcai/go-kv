@@ -10,11 +10,9 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
-
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 type keyValueItem struct {
@@ -164,20 +162,19 @@ func GetValue(filename string, key string) (string, error) {
 
 func PrintItemsInTable(filename string) {
 	store := GetStore(filename)
-	t := table.NewWriter()
-	t.SetAllowedRowLength(80)
-	// t.SetStyle(table.StyleColoredBlueWhiteOnBlack)
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Key", "Value"})
+	longest_col := 30
 	for _, v := range store.Items {
-		value := strings.ReplaceAll(base64decode(v.Value), "\n", "")
-		t.AppendRows([]table.Row{
-			{v.Key, value},
-		})
-
+		if len(v.Key) > longest_col {
+			longest_col = len(v.Key)
+		}
 	}
-	t.AppendSeparator()
-	t.Render()
+
+	formatter := "%-" + strconv.Itoa(longest_col) + "s%-23s%-23s\n"
+	fmt.Printf(FgYellow(formatter), "Key", "Created", "Updated")
+	for _, v := range store.Items {
+		fmt.Printf(formatter, v.Key, v.Created, v.Updated)
+		// value := strings.ReplaceAll(base64decode(v.Value), "\n", "")
+	}
 }
 
 func RenameKey(filename string, oldKey string, newKey string) {
@@ -197,11 +194,11 @@ func RenameKey(filename string, oldKey string, newKey string) {
 
 func PrintRow(item *keyValueItem) {
 	value := base64decode(item.Value)
-	sep := text.FgHiBlack.Sprint(":")
-	fmt.Printf("KEY     %s %s\n", sep, text.FgHiRed.Sprint(item.Key))
-	fmt.Printf("CREATED %s %s\n", sep, text.FgYellow.Sprint(item.Created))
-	fmt.Printf("UPDATED %s %s\n", sep, text.FgYellow.Sprint(item.Updated))
-	fmt.Printf("VALUE   %s %s\n", sep, text.FgGreen.Sprint(value))
+	sep := FgGray(":")
+	fmt.Printf("KEY     %s %s\n", sep, FgRed(item.Key))
+	fmt.Printf("CREATED %s %s\n", sep, FgYellow(item.Created))
+	fmt.Printf("UPDATED %s %s\n", sep, FgYellow(item.Updated))
+	fmt.Printf("VALUE   %s %s\n", sep, FgGreen(value))
 }
 
 func PrintItemsRaw(filename string) {
@@ -209,6 +206,6 @@ func PrintItemsRaw(filename string) {
 
 	for _, v := range store.Items {
 		PrintRow(&v)
-		fmt.Println(text.FgHiBlack.Sprint(strings.Repeat("=", 80)))
+		fmt.Println(FgGray(strings.Repeat("=", 80)))
 	}
 }

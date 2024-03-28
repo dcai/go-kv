@@ -24,3 +24,6 @@ go.sum
 data.json
 kv
 vendor
+
+dist/
+target/
