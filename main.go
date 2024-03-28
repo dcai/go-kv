@@ -6,6 +6,8 @@ import (
 	"io"
 	"log"
 	"os"
+
+	kv "github.com/dcai/kv/src"
 )
 
 const JSON_DB_FILEPATH = "data.json"
@@ -26,7 +28,7 @@ func main() {
 
 	action := os.Args[1]
 
-	InitJsonDB(JSON_DB_FILEPATH)
+	kv.InitJsonDB(JSON_DB_FILEPATH)
 
 	switch action {
 	case "set":
@@ -47,7 +49,7 @@ func main() {
 			value = setCmd.Args()[1]
 		}
 		if value != "" {
-			SetValue(JSON_DB_FILEPATH, key, value)
+			kv.SetValue(JSON_DB_FILEPATH, key, value)
 		} else {
 			log.Fatalln("Missing value. Try 'kv set key value'")
 		}
@@ -60,15 +62,15 @@ func main() {
 			key = getCmd.Args()[0]
 		}
 		if key != "" {
-			value, err := GetValue(JSON_DB_FILEPATH, key)
+			value, err := kv.GetValue(JSON_DB_FILEPATH, key)
 			if err == nil {
 				fmt.Print(value)
 			}
 		} else {
 			if *getAllRows {
-				PrintItemsRaw(JSON_DB_FILEPATH)
+				kv.PrintItemsRaw(JSON_DB_FILEPATH)
 			} else {
-				PrintItemsInTable(JSON_DB_FILEPATH)
+				kv.PrintItemsInTable(JSON_DB_FILEPATH)
 			}
 		}
 	case "rm":
@@ -78,14 +80,14 @@ func main() {
 		if len(rmCmd.Args()) > 0 {
 			key = rmCmd.Args()[0]
 		}
-		DeleteItem(JSON_DB_FILEPATH, key)
+		kv.DeleteItem(JSON_DB_FILEPATH, key)
 	case "rename":
 		renameCmd := flag.NewFlagSet("rename", flag.ExitOnError)
 		renameCmd.Parse(os.Args[2:])
 		if len(renameCmd.Args()) >= 2 {
 			oldkey := renameCmd.Args()[0]
 			newkey := renameCmd.Args()[1]
-			RenameKey(JSON_DB_FILEPATH, oldkey, newkey)
+			kv.RenameKey(JSON_DB_FILEPATH, oldkey, newkey)
 		}
 
 	default:

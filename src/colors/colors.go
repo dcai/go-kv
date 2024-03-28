@@ -1,4 +1,4 @@
-package main
+package colors
 
 const END = "\033[0m"
 
