@@ -1,4 +1,5 @@
 BIN:=kv
+PACKAGE:=github.com/dcai/kv
 GO?=go
 GOOS?=$(word 1, $(subst /, " ", $(word 4, $(shell go version))))
 MAKEFILE:=$(realpath $(lastword $(MAKEFILE_LIST)))
@@ -51,6 +52,12 @@ else
 $(error Build on $(UNAME_M) is not supported, yet.)
 endif
 
+build:
+	@mkdir -p target
+	# @echo $(PACKAGE)/cmd/kv
+	# @go build -o target/$(BIN) $(PACKAGE)/cmd/kv
+	@go build
+
 all: target/$(BINARY)
 	@echo $(UNAME_M)
 	@echo $(BINARY)
@@ -60,9 +67,6 @@ vars:
 	@echo $(GOOS)
 	@echo $(GO)
 	@echo $(SOURCES)
-
-build:
-	@go build -o $(BIN)
 
 test-set: build
 	@rm data.json
@@ -90,3 +94,6 @@ release:
 target/$(BINARYARM8): $(SOURCES)
 	@echo "-----------" $@
 	GOARCH=arm64 $(GO) build $(BUILD_FLAGS) -o $@
+
+goreleaser-local:
+	@goreleaser build --single-target --snapshot --clean
