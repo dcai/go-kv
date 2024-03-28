@@ -52,15 +52,12 @@ else
 $(error Build on $(UNAME_M) is not supported, yet.)
 endif
 
+all: build
+	@./kv get
+
 build:
 	@mkdir -p target
-	# @echo $(PACKAGE)/cmd/kv
-	# @go build -o target/$(BIN) $(PACKAGE)/cmd/kv
-	@go build
-
-all: target/$(BINARY)
-	@echo $(UNAME_M)
-	@echo $(BINARY)
+	@go build -o $(BIN) $(PACKAGE)/cmd/kv
 
 vars:
 	@echo $(ROOT_DIR)
@@ -84,9 +81,6 @@ test-getall: build
 
 test-getone: build
 	@./kv get NODE_ENV
-
-run: build
-	go run .
 
 release:
 	go build -ldflags "-w -s"
