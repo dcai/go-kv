@@ -22,8 +22,8 @@ go.work
 go-playground
 go.sum
 data.json
-kv
 vendor
-
 dist/
 target/
+tmp/
+temp/
